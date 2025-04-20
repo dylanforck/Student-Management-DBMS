@@ -14,11 +14,11 @@ app = Flask(__name__)
 # You can override this via FLASK_SECRET_KEY in production
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super_secret_key')
 
-# -----------------------------------------------------------------------------
-# Database configuration
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# Database configuration via env vars (supports MYSQL_URL or individual)
+# ----------------------------------------------------------------------
 if 'MYSQL_URL' in os.environ:
-    # Preferred single connection string
+    # Preferred: single connection string
     _url = urlparse(os.environ['MYSQL_URL'])
     DB_CFG = {
         'host':     _url.hostname,
@@ -28,14 +28,14 @@ if 'MYSQL_URL' in os.environ:
         'port':     _url.port or 3306
     }
 else:
-    # Fallback to individual variables
+    # Fallback: separate Railway‑provided variables
     DB_CFG = {
         'host':     os.environ.get('MYSQLHOST'),
         'port':     int(os.environ.get('MYSQLPORT', 3306)),
         'user':     os.environ.get('MYSQLUSER'),
         'password': os.environ.get('MYSQLPASSWORD') or os.environ.get('MYSQL_ROOT_PASSWORD'),
         'database': os.environ.get('MYSQLDATABASE') or os.environ.get('MYSQL_DATABASE'),
-    }
+    }  # :contentReference[oaicite:0]{index=0}&#8203;:contentReference[oaicite:1]{index=1}
 
 def get_db_conn():
     """Get a database connection for the current request."""
@@ -55,18 +55,18 @@ def close_db_conn(exception=None):
     if conn:
         close_connection(conn)
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Utilities
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 def hash_password(pw):
     return hashlib.md5(pw.encode()).hexdigest()
 
 def generate_student_id():
     return str(uuid.uuid4().int)[:9]
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Authentication Routes
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 @app.route('/login', methods=['GET','POST'])
 def login():
     conn = get_db_conn()
@@ -110,9 +110,9 @@ def logout():
     flash('Logged out.', 'info')
     return redirect(url_for('login'))
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Dashboard
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 @app.route('/')
 def index():
     return redirect(url_for('dashboard'))
@@ -123,9 +123,9 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html', username=session['username'])
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Role‑based decorator
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 from functools import wraps
 def admin_required(f):
     @wraps(f)
@@ -136,9 +136,9 @@ def admin_required(f):
         return f(*args, **kwargs)
     return wrapped
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Student CRUD Routes
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 @app.route('/students/add', methods=['GET','POST'])
 @admin_required
 def add_student():
@@ -173,7 +173,6 @@ def edit_student(student_id):
         )
         flash('Student updated!', 'success')
         return redirect(url_for('view_students'))
-
     rec = execute_read_query(conn, 'SELECT * FROM student WHERE id=%s', (student_id,))
     if not rec:
         flash('Student not found.', 'danger')
@@ -188,9 +187,9 @@ def delete_student(student_id):
     flash('Student deleted.', 'success')
     return redirect(url_for('view_students'))
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Score Query Route
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 @app.route('/scores/query')
 def query_scores():
     conn = get_db_conn()
@@ -208,9 +207,9 @@ def query_scores():
         )
     return render_template('query_scores.html', scores=scores, student_name=name)
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Entry point
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 if __name__ == '__main__':
     # Locally you can set MYSQL_URL before running, e.g.:
     # export MYSQL_URL="mysql://root:Password123!@localhost:3306/student_management"
