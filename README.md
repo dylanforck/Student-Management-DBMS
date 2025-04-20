@@ -70,12 +70,13 @@ CREATE TABLE user (
 );
 
 CREATE TABLE student (
-  id     VARCHAR(9)   PRIMARY KEY,
-  name   VARCHAR(100) NOT NULL,
-  age    INT          NOT NULL,
-  gender CHAR(1)      NOT NULL,
-  major  VARCHAR(100) NOT NULL,
-  phone  VARCHAR(12)  NOT NULL
+  id       VARCHAR(9)   PRIMARY KEY,
+  name     VARCHAR(100) NOT NULL,
+  age      INT          NOT NULL,
+  gender   CHAR(1)      NOT NULL,
+  major    VARCHAR(100) NOT NULL,
+  phone    VARCHAR(12)  NOT NULL,
+  version  INT          NOT NULL DEFAULT 1
 );
 
 CREATE TABLE course (
@@ -131,7 +132,7 @@ Visit <http://127.0.0.1:5000> in your browser.
 
 ## Deployment
 
-### Railway (or similar PaaS)
+### Railway
 
 1. Push your code to GitHub (include `requirements.txt`, `Procfile`, `templates/`, etc.).  
 2. In Railway’s dashboard, link the repo and set the same env vars (`FLASK_SECRET_KEY`, `MYSQL_URL`, etc.).  
@@ -141,7 +142,8 @@ Visit <http://127.0.0.1:5000> in your browser.
    ```
 4. Trigger a deploy—Railway will install dependencies, use the Procfile, and give you a live URL.
 
-You can follow a similar flow on Heroku, AWS Elastic Beanstalk, or other hosts.
+Hosted on Railway at  
+  https://student-management-dbms-production.up.railway.app
 
 ## Test Accounts
 
@@ -157,7 +159,7 @@ VALUES (
 ```
 
 - **Admin** → username: `Admin` | password: `Admin123!`  
-- **User** → username: `User` | password: `User123!`  
+- **User**  → username: `User`  | password: `User123!`  
 - **Other** → register through the UI with any valid username (3–6 letters, first capitalized) and password; will have `role='user'`.
 
 ## Project Structure
