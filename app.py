@@ -46,6 +46,10 @@ def get_db_conn():
             user_password = DB_CFG['password'],
             db_name       = DB_CFG['database']
         )
+        if g.db_conn is None:
+            raise RuntimeError(
+                f"Could not connect to database with config: {DB_CFG}"
+            )
     return g.db_conn
 
 @app.teardown_appcontext
