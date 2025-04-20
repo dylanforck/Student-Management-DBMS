@@ -1,24 +1,30 @@
-#Dylan Forck
-#Project
-#Description: Student Management System - Application
+# app.py
+# Author: Dylan Forck
 
+'''
+Student Management System - Main Flask Application
+'''
 
-
+# Standard library imports
 import os
 from urllib.parse import urlparse
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 import hashlib, uuid
 from mysql_db import open_connection, close_connection, execute_query, execute_read_query
 
+
+# Initialize Flask app
 app = Flask(__name__)
-# You can override this via FLASK_SECRET_KEY in production
+
+# Set secret key for session management
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super_secret_key')
 
-# ----------------------------------------------------------------------
-# Database configuration via env vars (supports MYSQL_URL or individual)
-# ----------------------------------------------------------------------
+
+
+# DATABASE CONFIGURATION
+# Supports Railway-style full URL or individual env vars
 if 'MYSQL_URL' in os.environ:
-    # Preferred: single connection string
+    # Preferred format: single MySQL connection URL
     _url = urlparse(os.environ['MYSQL_URL'])
     DB_CFG = {
         'host':     _url.hostname,
@@ -28,17 +34,17 @@ if 'MYSQL_URL' in os.environ:
         'port':     _url.port or 3306
     }
 else:
-    # Fallback: separate Railway‑provided variables
+    # Fallback if split env vars are provided instead
     DB_CFG = {
         'host':     os.environ.get('MYSQLHOST'),
         'port':     int(os.environ.get('MYSQLPORT', 3306)),
         'user':     os.environ.get('MYSQLUSER'),
         'password': os.environ.get('MYSQLPASSWORD') or os.environ.get('MYSQL_ROOT_PASSWORD'),
         'database': os.environ.get('MYSQLDATABASE') or os.environ.get('MYSQL_DATABASE'),
-    }  # :contentReference[oaicite:0]{index=0}&#8203;:contentReference[oaicite:1]{index=1}
+    }
 
+# Establish and return a per-request database connection (stored in Flask `g`)
 def get_db_conn():
-    """Get a database connection for the current request."""
     if 'db_conn' not in g:
         g.db_conn = open_connection(
              host_name     = DB_CFG['host'],
@@ -53,25 +59,29 @@ def get_db_conn():
             )
     return g.db_conn
 
+# Clean up and close DB connection after the request is handled
 @app.teardown_appcontext
 def close_db_conn(exception=None):
-    """Close the database connection at the end of the request."""
+
     conn = g.pop('db_conn', None)
     if conn:
         close_connection(conn)
 
-# ----------------------------------------------------------------------
-# Utilities
-# ----------------------------------------------------------------------
+
+
+# HELPER FUNCTIONS
+# Return MD5 hash of given plaintext password
 def hash_password(pw):
     return hashlib.md5(pw.encode()).hexdigest()
 
+# Generate a unique 9-digit student ID
 def generate_student_id():
     return str(uuid.uuid4().int)[:9]
 
-# ----------------------------------------------------------------------
-# Authentication Routes
-# ----------------------------------------------------------------------
+
+
+# AUTHENTICATION ROUTES
+# Authenticate user and start session
 @app.route('/login', methods=['GET','POST'])
 def login():
     conn = get_db_conn()
@@ -90,6 +100,7 @@ def login():
         flash('Invalid credentials', 'danger')
     return render_template('login.html')
 
+# Allow new user to register (default role is user)
 @app.route('/register', methods=['GET','POST'])
 def register():
     conn = get_db_conn()
@@ -109,29 +120,34 @@ def register():
             return redirect(url_for('login'))
     return render_template('register.html')
 
+# Logout user and clear session
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Logged out.', 'info')
     return redirect(url_for('login'))
 
-# ----------------------------------------------------------------------
-# Dashboard
-# ----------------------------------------------------------------------
+
+
+# DASHBOARD ROUTES
+# Root URL — redirect to dashboard
 @app.route('/')
 def index():
     return redirect(url_for('dashboard'))
 
+# Show dashboard if user is logged in
 @app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
         return redirect(url_for('login'))
     return render_template('dashboard.html', username=session['username'])
 
-# ----------------------------------------------------------------------
-# Role‑based decorator
-# ----------------------------------------------------------------------
+
+
+# DECORATOR FOR ADMIN-ONLY ACCESS
 from functools import wraps
+
+# Restrict route access to users with admin role
 def admin_required(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
@@ -141,9 +157,10 @@ def admin_required(f):
         return f(*args, **kwargs)
     return wrapped
 
-# ----------------------------------------------------------------------
-# Student CRUD Routes
-# ----------------------------------------------------------------------
+
+
+# STUDENT CRUD ROUTES
+# Admin can add new student records
 @app.route('/students/add', methods=['GET','POST'])
 @admin_required
 def add_student():
@@ -159,18 +176,19 @@ def add_student():
         return redirect(url_for('view_students'))
     return render_template('add_student.html')
 
+# Show all student records to any logged-in user
 @app.route('/students/view')
 def view_students():
     conn = get_db_conn()
     students = execute_read_query(conn, 'SELECT * FROM student')
     return render_template('view_students.html', students=students)
 
+# Admin can edit a student record, uses version field for optimistic locking
 @app.route('/students/edit/<student_id>', methods=['GET','POST'])
 @admin_required
 def edit_student(student_id):
     conn = get_db_conn()
     if request.method == 'POST':
-        # Optimistic lock: only update if version matches
         old_ver = int(request.form['version'])
         affected = execute_query(conn, '''
             UPDATE student
@@ -196,7 +214,7 @@ def edit_student(student_id):
             flash('Student record updated!', 'success')
         return redirect(url_for('view_students'))
 
-    # On GET, fetch including current version
+    # Show edit form with current data on GET
     rec = execute_read_query(conn,
         'SELECT id,name,age,gender,major,phone,version FROM student WHERE id=%s',
         (student_id,)
@@ -206,6 +224,7 @@ def edit_student(student_id):
         return redirect(url_for('view_students'))
     return render_template('edit_student.html', student=rec[0])
 
+# Admin can delete student records
 @app.route('/students/delete/<student_id>', methods=['POST'])
 @admin_required
 def delete_student(student_id):
@@ -214,9 +233,10 @@ def delete_student(student_id):
     flash('Student deleted.', 'success')
     return redirect(url_for('view_students'))
 
-# ----------------------------------------------------------------------
-# Score Query Route
-# ----------------------------------------------------------------------
+
+
+# SCORE QUERY ROUTE
+# Users can search for a student's scores by name
 @app.route('/scores/query')
 def query_scores():
     conn = get_db_conn()
@@ -234,10 +254,10 @@ def query_scores():
         )
     return render_template('query_scores.html', scores=scores, student_name=name)
 
-# ----------------------------------------------------------------------
-# Entry point
-# ----------------------------------------------------------------------
+
+
+# ENTRY POINT
+# Run the Flask dev server
 if __name__ == '__main__':
-    # Locally you can set MYSQL_URL before running, e.g.:
-    # export MYSQL_URL="mysql://root:Password123!@localhost:3306/student_management"
     app.run(debug=True)
+
