@@ -1,0 +1,15 @@
+<!-- templates/dashboard.html -->
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2>Dashboard - Welcome, {{ username }}</h2>
+<nav>
+  <ul>
+    {% if session.role=='admin' %}
+    <li><a href="{{ url_for('add_student') }}">Add Student</a></li>
+    {% endif %}
+    <li><a href="{{ url_for('view_students') }}">View Students</a></li>
+    <li><a href="{{ url_for('query_scores') }}">Query Student Scores</a></li>
+  </ul>
+</nav>
+{% endblock %}

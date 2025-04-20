@@ -1,0 +1,38 @@
+<!-- templates/query_scores.html -->
+{% extends "base.html" %}
+{% block title %}Query Student Scores{% endblock %}
+{% block content %}
+<h2>Query Student Scores</h2>
+<form method="get" action="{{ url_for('query_scores') }}">
+    <label for="student_name">Student Name:</label>
+    <input type="text" name="student_name" placeholder="Enter student name" value="{{ student_name }}">
+    <br/><br/>
+    <input type="submit" value="Search">
+</form>
+
+{% if scores %}
+  <h3>Score Results for {{ student_name }}</h3>
+  <table border="1">
+    <tr>
+      <th>Student ID</th>
+      <th>Name</th>
+      <th>Course ID</th>
+      <th>Course Name</th>
+      <th>Score</th>
+    </tr>
+    {% for record in scores %}
+    <tr>
+      <td>{{ record.id }}</td>
+      <td>{{ record.name }}</td>
+      <td>{{ record.course_id }}</td>
+      <td>{{ record.course_name }}</td>
+      <td>{{ record.score }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+{% elif student_name %}
+  <p>No score records found for "{{ student_name }}".</p>
+{% endif %}
+<p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+{% endblock %}
+

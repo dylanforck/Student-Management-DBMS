@@ -1,0 +1,31 @@
+<!-- templates/edit_student.html -->
+{% extends "base.html" %}
+{% block title %}Edit Student{% endblock %}
+{% block content %}
+<h2>Edit Student Record</h2>
+<form method="post" action="{{ url_for('edit_student', student_id=student.id) }}">
+    <input type="hidden" name="version" value="{{ student.version }}">
+
+    <label for="name">Name:</label>
+    <input type="text" name="name" value="{{ student.name }}" required><br/>
+
+    <label for="age">Age:</label>
+    <input type="number" name="age" value="{{ student.age }}" required><br/>
+
+    <label for="gender">Gender:</label>
+    <select name="gender" required>
+      <option value="M" {% if student.gender=='M' %}selected{% endif %}>Male</option>
+      <option value="F" {% if student.gender=='F' %}selected{% endif %}>Female</option>
+      <option value="O" {% if student.gender=='O' %}selected{% endif %}>Other</option>
+    </select><br/>
+
+    <label for="major">Major:</label>
+    <input type="text" name="major" value="{{ student.major }}" required><br/>
+
+    <label for="phone">Phone:</label>
+    <input type="text" name="phone" value="{{ student.phone }}" required><br/><br/>
+
+    <input type="submit" value="Update Student">
+</form>
+<p><a href="{{ url_for('view_students') }}">Back to Student List</a></p>
+{% endblock %}

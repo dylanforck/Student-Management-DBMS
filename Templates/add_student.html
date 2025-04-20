@@ -1,0 +1,29 @@
+<!-- templates/add_student.html -->
+{% extends "base.html" %}
+{% block title %}Add Student{% endblock %}
+{% block content %}
+<h2>Add New Student</h2>
+<form method="post" action="{{ url_for('add_student') }}">
+    <label for="name">Name:</label>
+    <input type="text" name="name" placeholder="John Doe" required>
+    <br/>
+    <label for="age">Age:</label>
+    <input type="number" name="age" required>
+    <br/>
+    <label for="gender">Gender:</label>
+    <select name="gender" required>
+      <option value="M">Male</option>
+      <option value="F">Female</option>
+      <option value="O">Other</option>
+    </select>
+    <br/>
+    <label for="major">Major:</label>
+    <input type="text" name="major" required>
+    <br/>
+    <label for="phone">Phone (xxx-xxx-xxxx):</label>
+    <input type="text" name="phone" required>
+    <br/><br/>
+    <input type="submit" value="Add Student">
+</form>
+<p><a href="{{ url_for('dashboard') }}">Back to Dashboard</a></p>
+{% endblock %}

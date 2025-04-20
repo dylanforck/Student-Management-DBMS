@@ -1,0 +1,35 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Student Management System - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+</head>
+<body>
+    <header>
+        <h1>Student Management System</h1>
+        {% if session.username %}
+          <p>Logged in as: {{ session.username }} | <a href="{{ url_for('logout') }}">Logout</a></p>
+        {% endif %}
+    </header>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul>
+              {% for category, message in messages %}
+              <li style="color: {% if category == 'danger' %}red{% elif category == 'success' %}green{% else %}black{% endif %};">
+                  {{ message }}
+              </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2025 Student Management System</p>
+    </footer>
+</body>
+</html>
+
