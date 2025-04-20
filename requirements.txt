@@ -1,0 +1,14 @@
+# Core web framework
+Flask>=2.3.0,<3.0
+
+# MySQL driver
+mysql-connector-python>=8.0.0,<9.0
+
+# Environment loading (optional)
+python-dotenv>=1.0.0
+
+# Production WSGI server
+gunicorn>=20.0.0,<21.0
+
+# (Optional) Code reloading in development
+watchdog>=3.0.0
