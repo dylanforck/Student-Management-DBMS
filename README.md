@@ -13,7 +13,6 @@ A simple Flask + MySQL web application for managing student records, with role�
 6. [Deployment](#deployment)  
 7. [Test Accounts](#test-accounts)  
 8. [Project Structure](#project-structure)  
-9. [License](#license)
 
 ## Features
 
@@ -167,6 +166,8 @@ VALUES (
 Student-Management-DBMS/
 ├── app.py              # Main Flask application
 ├── mysql_db.py         # MySQL connection & helper functions
+├── database_schema.sql # MySQL database table schema
+├── mock_table_data.sql # Used to load mock sql table data
 ├── requirements.txt    # Python dependencies
 ├── Procfile            # web: gunicorn app:app
 ├── README.md           # This documentation
@@ -180,9 +181,3 @@ Student-Management-DBMS/
     ├── edit_student.html
     └── query_scores.html
 ```
-
-## License
-
-This project is licensed under the MIT License.  
-See [LICENSE](LICENSE) for full details.
-
