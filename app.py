@@ -41,11 +41,12 @@ def get_db_conn():
     """Get a database connection for the current request."""
     if 'db_conn' not in g:
         g.db_conn = open_connection(
-            host_name     = DB_CFG['host'],
-            user_name     = DB_CFG['user'],
-            user_password = DB_CFG['password'],
-            db_name       = DB_CFG['database']
-        )
+             host_name     = DB_CFG['host'],
+             user_name     = DB_CFG['user'],
+             user_password = DB_CFG['password'],
+             db_name       = DB_CFG['database'],
+             port          = DB_CFG.get('port', 3306)
+         )
         if g.db_conn is None:
             raise RuntimeError(
                 f"Could not connect to database with config: {DB_CFG}"

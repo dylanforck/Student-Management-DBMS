@@ -15,6 +15,7 @@ def open_connection(host_name: str, user_name: str, user_password: str, db_name:
     try:
         connection = mysql.connector.connect(
             host=host_name,
+            port=port,
             user=user_name,
             password=user_password,
             database=db_name
