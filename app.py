@@ -4,52 +4,69 @@
 
 
 
-# app.py
+import os
+from urllib.parse import urlparse
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
-from functools import wraps
 import hashlib, uuid
 from mysql_db import open_connection, close_connection, execute_query, execute_read_query
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_key'
+# You can override this via FLASK_SECRET_KEY in production
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'super_secret_key')
 
-# Database config
-DB_CFG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'Password123!',
-    'database': 'student_management'
-}
+# -----------------------------------------------------------------------------
+# Database configuration
+# -----------------------------------------------------------------------------
+if 'MYSQL_URL' in os.environ:
+    # Preferred single connection string
+    _url = urlparse(os.environ['MYSQL_URL'])
+    DB_CFG = {
+        'host':     _url.hostname,
+        'user':     _url.username,
+        'password': _url.password,
+        'database': _url.path.lstrip('/'),
+        'port':     _url.port or 3306
+    }
+else:
+    # Fallback to individual variables
+    DB_CFG = {
+        'host':     os.environ.get('MYSQLHOST'),
+        'port':     int(os.environ.get('MYSQLPORT', 3306)),
+        'user':     os.environ.get('MYSQLUSER'),
+        'password': os.environ.get('MYSQLPASSWORD') or os.environ.get('MYSQL_ROOT_PASSWORD'),
+        'database': os.environ.get('MYSQLDATABASE') or os.environ.get('MYSQL_DATABASE'),
+    }
 
 def get_db_conn():
+    """Get a database connection for the current request."""
     if 'db_conn' not in g:
-        g.db_conn = open_connection(**DB_CFG)
+        g.db_conn = open_connection(
+            host_name     = DB_CFG['host'],
+            user_name     = DB_CFG['user'],
+            user_password = DB_CFG['password'],
+            db_name       = DB_CFG['database']
+        )
     return g.db_conn
 
 @app.teardown_appcontext
 def close_db_conn(exception=None):
+    """Close the database connection at the end of the request."""
     conn = g.pop('db_conn', None)
     if conn:
         close_connection(conn)
 
+# -----------------------------------------------------------------------------
 # Utilities
-
+# -----------------------------------------------------------------------------
 def hash_password(pw):
     return hashlib.md5(pw.encode()).hexdigest()
 
 def generate_student_id():
     return str(uuid.uuid4().int)[:9]
 
-def admin_required(f):
-    @wraps(f)
-    def wrapped(*args, **kwargs):
-        if session.get('role') != 'admin':
-            flash('Admin access required', 'danger')
-            return redirect(url_for('dashboard'))
-        return f(*args, **kwargs)
-    return wrapped
-
-# --- Authentication ---
+# -----------------------------------------------------------------------------
+# Authentication Routes
+# -----------------------------------------------------------------------------
 @app.route('/login', methods=['GET','POST'])
 def login():
     conn = get_db_conn()
@@ -62,7 +79,7 @@ def login():
         )
         if res:
             session['username'] = usr
-            session['role'] = res[0]['role']
+            session['role']     = res[0].get('role', 'user')
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard'))
         flash('Invalid credentials', 'danger')
@@ -76,16 +93,15 @@ def register():
         pwd = request.form['password']
         if not (usr.isalpha() and 3 <= len(usr) <= 6 and usr[0].isupper()):
             flash('Username must be 3-6 letters, first letter capitalized.', 'danger')
+        elif execute_read_query(conn, 'SELECT 1 FROM user WHERE username=%s', (usr,)):
+            flash('Username already exists!', 'danger')
         else:
-            if execute_read_query(conn, 'SELECT * FROM user WHERE username=%s', (usr,)):
-                flash('Username already exists!', 'danger')
-            else:
-                execute_query(conn,
-                    'INSERT INTO user (username, password) VALUES (%s, %s)',
-                    (usr, hash_password(pwd))
-                )
-                flash('Registration successful! Please log in.', 'success')
-                return redirect(url_for('login'))
+            execute_query(conn,
+                'INSERT INTO user (username, password) VALUES (%s, %s)',
+                (usr, hash_password(pwd))
+            )
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for('login'))
     return render_template('register.html')
 
 @app.route('/logout')
@@ -94,7 +110,9 @@ def logout():
     flash('Logged out.', 'info')
     return redirect(url_for('login'))
 
-# --- Dashboard ---
+# -----------------------------------------------------------------------------
+# Dashboard
+# -----------------------------------------------------------------------------
 @app.route('/')
 def index():
     return redirect(url_for('dashboard'))
@@ -105,7 +123,22 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html', username=session['username'])
 
-# --- Student CRUD ---
+# -----------------------------------------------------------------------------
+# Role‑based decorator
+# -----------------------------------------------------------------------------
+from functools import wraps
+def admin_required(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        if session.get('role') != 'admin':
+            flash('Admin access required', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return wrapped
+
+# -----------------------------------------------------------------------------
+# Student CRUD Routes
+# -----------------------------------------------------------------------------
 @app.route('/students/add', methods=['GET','POST'])
 @admin_required
 def add_student():
@@ -131,22 +164,14 @@ def view_students():
 @admin_required
 def edit_student(student_id):
     conn = get_db_conn()
-    if request.method == 'POST':
-        ver = int(request.form['version'])
-        affected = execute_query(conn,
-            '''
-            UPDATE student
-            SET name=%s, age=%s, gender=%s, major=%s, phone=%s, version=version+1
-            WHERE id=%s AND version=%s
-            ''',
+    if request.method=='POST':
+        execute_query(conn,
+            'UPDATE student SET name=%s,age=%s,gender=%s,major=%s,phone=%s WHERE id=%s',
             (request.form['name'], request.form['age'],
              request.form['gender'], request.form['major'],
-             request.form['phone'], student_id, ver)
+             request.form['phone'], student_id)
         )
-        if affected == 0:
-            flash('Concurrent modification detected. Reload and try again.', 'danger')
-        else:
-            flash('Student record updated!', 'success')
+        flash('Student updated!', 'success')
         return redirect(url_for('view_students'))
 
     rec = execute_read_query(conn, 'SELECT * FROM student WHERE id=%s', (student_id,))
@@ -163,7 +188,9 @@ def delete_student(student_id):
     flash('Student deleted.', 'success')
     return redirect(url_for('view_students'))
 
-# --- Score Query ---
+# -----------------------------------------------------------------------------
+# Score Query Route
+# -----------------------------------------------------------------------------
 @app.route('/scores/query')
 def query_scores():
     conn = get_db_conn()
@@ -181,7 +208,10 @@ def query_scores():
         )
     return render_template('query_scores.html', scores=scores, student_name=name)
 
+# -----------------------------------------------------------------------------
+# Entry point
+# -----------------------------------------------------------------------------
 if __name__ == '__main__':
+    # Locally you can set MYSQL_URL before running, e.g.:
+    # export MYSQL_URL="mysql://root:Password123!@localhost:3306/student_management"
     app.run(debug=True)
-
-    
