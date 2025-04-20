@@ -13,6 +13,7 @@ A simple Flask + MySQL web application for managing student records, with role�
 6. [Deployment](#deployment)  
 7. [Test Accounts](#test-accounts)  
 8. [Project Structure](#project-structure)  
+9. [Database Model](#database-model) 
 
 ## Features
 
@@ -40,25 +41,25 @@ mysql-connector-python
 ## Setup & Local Development
 
 1. **Clone the repo**  
-   ```bash
+```bash
 git clone https://github.com/dylanforck/Student‑Management‑DBMS.git
 cd Student‑Management‑DBMS
 ```
 
 2. **Create & activate a virtual environment**  
-   ```bash
+```bash
 python3 -m venv venv
 source venv/bin/activate     # macOS/Linux
 venv\Scripts\activate        # Windows
 ```
 
 3. **Install Python dependencies**  
-   ```bash
+```bash
 pip install -r requirements.txt
 ```
 
-4. **Initialize your MySQL database**  
-   ```sql
+4. **Initialize the MySQL database**  
+```sql
 CREATE DATABASE student_management;
 
 USE student_management;
@@ -96,7 +97,7 @@ CREATE TABLE score (
 
 ## Environment Variables
 
-Your app reads configuration from environment variables:
+The app reads configuration from environment variables:
 
 - **`FLASK_SECRET_KEY`**  
   Secret key for sessions (defaults to `super_secret_key` if unset).
@@ -116,7 +117,7 @@ Your app reads configuration from environment variables:
 
 ## Running the App
 
-With your virtualenv active and env vars set:
+With the virtualenv active and env vars set:
 
 ```bash
 # Option A: Flask’s development server
@@ -134,9 +135,9 @@ Visit <http://127.0.0.1:5000> in your browser.
 
 ### Railway
 
-1. Push your code to GitHub (include `requirements.txt`, `Procfile`, `templates/`, etc.).  
+1. Push the code to GitHub (include `requirements.txt`, `Procfile`, `templates/`, etc.).  
 2. In Railway’s dashboard, link the repo and set the same env vars (`FLASK_SECRET_KEY`, `MYSQL_URL`, etc.).  
-3. Ensure your `Procfile` contains:
+3. Ensure the `Procfile` contains:
    ```
    web: gunicorn app:app
    ```
@@ -183,3 +184,9 @@ Student-Management-DBMS/
     ├── edit_student.html
     └── query_scores.html
 ```
+
+## Database Model
+
+Below is the Entity–Relationship diagram for the Student Management System:
+
+![ER Diagram](docs/er_diagram.png)
