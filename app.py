@@ -169,16 +169,38 @@ def view_students():
 @admin_required
 def edit_student(student_id):
     conn = get_db_conn()
-    if request.method=='POST':
-        execute_query(conn,
-            'UPDATE student SET name=%s,age=%s,gender=%s,major=%s,phone=%s WHERE id=%s',
-            (request.form['name'], request.form['age'],
-             request.form['gender'], request.form['major'],
-             request.form['phone'], student_id)
-        )
-        flash('Student updated!', 'success')
+    if request.method == 'POST':
+        # Optimistic lock: only update if version matches
+        old_ver = int(request.form['version'])
+        affected = execute_query(conn, '''
+            UPDATE student
+            SET name=%s,
+                age=%s,
+                gender=%s,
+                major=%s,
+                phone=%s,
+                version=version+1
+            WHERE id=%s AND version=%s
+        ''', (
+            request.form['name'],
+            request.form['age'],
+            request.form['gender'],
+            request.form['major'],
+            request.form['phone'],
+            student_id,
+            old_ver
+        ))
+        if affected == 0:
+            flash('Concurrent modification detected. Please reload and try again.', 'danger')
+        else:
+            flash('Student record updated!', 'success')
         return redirect(url_for('view_students'))
-    rec = execute_read_query(conn, 'SELECT * FROM student WHERE id=%s', (student_id,))
+
+    # On GET, fetch including current version
+    rec = execute_read_query(conn,
+        'SELECT id,name,age,gender,major,phone,version FROM student WHERE id=%s',
+        (student_id,)
+    )
     if not rec:
         flash('Student not found.', 'danger')
         return redirect(url_for('view_students'))
