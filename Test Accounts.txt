@@ -1,0 +1,20 @@
+Test Accounts
+
+User
+Admin
+
+Password
+Admin123!
+
+Role 
+Admin
+
+
+User
+User
+
+Password
+User123!
+
+Role 
+User
