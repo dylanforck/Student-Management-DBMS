@@ -42,7 +42,7 @@ mysql-connector-python
 
 1. **Clone the repo**  
    ```bash
-git clone https://github.com/your‑username/Student‑Management‑DBMS.git
+git clone https://github.com/dylanforck/Student‑Management‑DBMS.git
 cd Student‑Management‑DBMS
 ```
 
