@@ -8,7 +8,11 @@
 import mysql.connector
 from mysql.connector import Error
 
-def open_connection(host_name: str, user_name: str, user_password: str, db_name: str):
+def open_connection(host_name: str,
+                    user_name: str,
+                    user_password: str,
+                    db_name: str,
+                    port: int = 3306):
     """
     Opens a connection to the MySQL database.
     """
