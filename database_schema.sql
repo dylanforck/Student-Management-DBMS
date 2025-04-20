@@ -1,7 +1,3 @@
-CREATE DATABASE IF NOT EXISTS student_management;
-
-USE student_management;
-
 -- Base schema (from mysql_db.py):
 CREATE TABLE IF NOT EXISTS user (
   username VARCHAR(32) PRIMARY KEY,
