@@ -23,7 +23,7 @@ A simple Flask + MySQL web application for managing student records, with role�
   - **User** can view students and query scores  
 - Student CRUD (Create, Read, Update, Delete)  
 - Query student scores across courses  
-- Configurable via environment variables for easy local/remote deployment  
+- Configurable via environment variables for easy local/remote deployment
 
 ## Requirements
 
@@ -36,3 +36,153 @@ Python packages (install via `requirements.txt`):
 ```bash
 flask
 mysql-connector-python
+```
+
+## Setup & Local Development
+
+1. **Clone the repo**  
+   ```bash
+git clone https://github.com/your‑username/Student‑Management‑DBMS.git
+cd Student‑Management‑DBMS
+```
+
+2. **Create & activate a virtual environment**  
+   ```bash
+python3 -m venv venv
+source venv/bin/activate     # macOS/Linux
+venv\Scripts\activate        # Windows
+```
+
+3. **Install Python dependencies**  
+   ```bash
+pip install -r requirements.txt
+```
+
+4. **Initialize your MySQL database**  
+   ```sql
+CREATE DATABASE student_management;
+
+USE student_management;
+
+CREATE TABLE user (
+  username VARCHAR(6)     PRIMARY KEY,
+  password CHAR(32)       NOT NULL,
+  role     VARCHAR(10)    NOT NULL DEFAULT 'user'
+);
+
+CREATE TABLE student (
+  id     VARCHAR(9)   PRIMARY KEY,
+  name   VARCHAR(100) NOT NULL,
+  age    INT          NOT NULL,
+  gender CHAR(1)      NOT NULL,
+  major  VARCHAR(100) NOT NULL,
+  phone  VARCHAR(12)  NOT NULL
+);
+
+CREATE TABLE course (
+  course_id   VARCHAR(10) PRIMARY KEY,
+  course_name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE score (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  student_id  VARCHAR(9),
+  course_id   VARCHAR(10),
+  score       INT,
+  FOREIGN KEY (student_id) REFERENCES student(id),
+  FOREIGN KEY (course_id)  REFERENCES course(course_id)
+);
+```
+
+## Environment Variables
+
+Your app reads configuration from environment variables:
+
+- **`FLASK_SECRET_KEY`**  
+  Secret key for sessions (defaults to `super_secret_key` if unset).
+
+- **`MYSQL_URL`** _(preferred)_  
+  A full connection string, e.g.:  
+  ```
+  mysql://user:password@hostname:3306/student_management
+  ```
+
+- **OR**, if you don’t use `MYSQL_URL`, set these instead:  
+  - `MYSQLHOST`  
+  - `MYSQLPORT` (defaults to `3306`)  
+  - `MYSQLUSER`  
+  - `MYSQLPASSWORD` _or_ `MYSQL_ROOT_PASSWORD`  
+  - `MYSQLDATABASE` _or_ `MYSQL_DATABASE`
+
+## Running the App
+
+With your virtualenv active and env vars set:
+
+```bash
+# Option A: Flask’s development server
+export FLASK_APP=app.py
+export FLASK_ENV=development
+flask run
+
+# Option B: Directly via Python
+python app.py
+```
+
+Visit <http://127.0.0.1:5000> in your browser.
+
+## Deployment
+
+### Railway (or similar PaaS)
+
+1. Push your code to GitHub (include `requirements.txt`, `Procfile`, `templates/`, etc.).  
+2. In Railway’s dashboard, link the repo and set the same env vars (`FLASK_SECRET_KEY`, `MYSQL_URL`, etc.).  
+3. Ensure your `Procfile` contains:
+   ```
+   web: gunicorn app:app
+   ```
+4. Trigger a deploy—Railway will install dependencies, use the Procfile, and give you a live URL.
+
+You can follow a similar flow on Heroku, AWS Elastic Beanstalk, or other hosts.
+
+## Test Accounts
+
+> **Note:** registration via the UI always creates a `role='user'`. To get an **admin** account, insert one manually:
+
+```sql
+INSERT INTO user (username, password, role)
+VALUES (
+  'Admin',
+  MD5('admin'),
+  'admin'
+);
+```
+
+- **Admin** → username: `Admin` | password: `Admin123!`  
+- **User** → username: `User` | password: `User123!`  
+- **Other** → register through the UI with any valid username (3–6 letters, first capitalized) and password; will have `role='user'`.
+
+## Project Structure
+
+```
+Student-Management-DBMS/
+├── app.py              # Main Flask application
+├── mysql_db.py         # MySQL connection & helper functions
+├── requirements.txt    # Python dependencies
+├── Procfile            # web: gunicorn app:app
+├── README.md           # This documentation
+└── templates/
+    ├── base.html
+    ├── login.html
+    ├── register.html
+    ├── dashboard.html
+    ├── add_student.html
+    ├── view_students.html
+    ├── edit_student.html
+    └── query_scores.html
+```
+
+## License
+
+This project is licensed under the MIT License.  
+See [LICENSE](LICENSE) for full details.
+
