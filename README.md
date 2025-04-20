@@ -154,7 +154,7 @@ Hosted on Railway at
 INSERT INTO user (username, password, role)
 VALUES (
   'Admin',
-  MD5('admin'),
+  MD5('Admin123!'),
   'admin'
 );
 ```
