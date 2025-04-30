@@ -1,8 +1,8 @@
--- Base schema (from mysql_db.py):
+-- Base schema:
 CREATE TABLE IF NOT EXISTS user (
   username VARCHAR(32) PRIMARY KEY,
   password VARCHAR(32) NOT NULL,
-  role     ENUM('admin','user') NOT NULL DEFAULT 'user'
+  role ENUM('admin','user') NOT NULL DEFAULT 'user'
 );
 
 CREATE TABLE IF NOT EXISTS student (

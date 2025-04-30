@@ -65,33 +65,33 @@ CREATE DATABASE student_management;
 USE student_management;
 
 CREATE TABLE user (
-  username VARCHAR(6)     PRIMARY KEY,
-  password CHAR(32)       NOT NULL,
-  role     VARCHAR(10)    NOT NULL DEFAULT 'user'
+  username VARCHAR(32) PRIMARY KEY,
+  password VARCHAR(32) NOT NULL,
+  role ENUM('admin','user') NOT NULL DEFAULT 'user'
 );
 
 CREATE TABLE student (
-  id       VARCHAR(9)   PRIMARY KEY,
-  name     VARCHAR(100) NOT NULL,
-  age      INT          NOT NULL,
-  gender   CHAR(1)      NOT NULL,
-  major    VARCHAR(100) NOT NULL,
-  phone    VARCHAR(12)  NOT NULL,
-  version  INT          NOT NULL DEFAULT 1
+  id VARCHAR(9) PRIMARY KEY,
+  name VARCHAR(32) NOT NULL,
+  age INT,
+  gender CHAR(1),
+  major VARCHAR(32),
+  phone VARCHAR(32),
+  version INT NOT NULL DEFAULT 1
 );
 
 CREATE TABLE course (
-  course_id   VARCHAR(10) PRIMARY KEY,
-  course_name VARCHAR(100) NOT NULL
+  course_id VARCHAR(32) PRIMARY KEY,
+  course_name VARCHAR(64) NOT NULL
 );
 
 CREATE TABLE score (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
-  student_id  VARCHAR(9),
-  course_id   VARCHAR(10),
-  score       INT,
-  FOREIGN KEY (student_id) REFERENCES student(id),
-  FOREIGN KEY (course_id)  REFERENCES course(course_id)
+  student_id VARCHAR(9),
+  course_id VARCHAR(32),
+  score INT,
+  PRIMARY KEY (student_id, course_id),
+  FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
+  FOREIGN KEY (course_id) REFERENCES course(course_id) ON DELETE CASCADE
 );
 ```
 
