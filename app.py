@@ -1,6 +1,7 @@
 # app.py
 # Author: Dylan Forck
 
+
 '''
 Student Management System - Main Flask Application
 '''

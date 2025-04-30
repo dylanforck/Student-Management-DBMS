@@ -1,6 +1,7 @@
 # mysql_db.py
 # Author: Dylan Forck
 
+
 '''
 Provides helper functions to manage MySQL database connections
 and execute SQL queries for the Student Management System.

@@ -12,3 +12,4 @@ gunicorn>=20.0.0,<21.0
 
 # (Optional) Code reloading in development
 watchdog>=3.0.0
+

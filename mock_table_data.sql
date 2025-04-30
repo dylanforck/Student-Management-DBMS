@@ -23,3 +23,4 @@ INSERT INTO score (student_id, course_id, score) VALUES
   ('100000004', 'CS101',   90),
   ('100000004', 'MATH201', 94),
   ('100000005', 'ENG150',  88);
+  

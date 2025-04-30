@@ -28,4 +28,3 @@ CREATE TABLE IF NOT EXISTS score (
   FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE CASCADE,
   FOREIGN KEY (course_id) REFERENCES course(course_id) ON DELETE CASCADE
 );
-
